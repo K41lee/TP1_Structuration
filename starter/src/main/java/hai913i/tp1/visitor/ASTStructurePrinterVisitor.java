@@ -2,6 +2,8 @@ package hai913i.tp1.visitor;
 
 import org.eclipse.jdt.core.dom.*;
 
+// Visiteur pour afficher la structure de l'AST avec indentation.
+// Exercice A1
 public class ASTStructurePrinterVisitor extends ASTVisitor {
     private int indentLevel = 0;
 
