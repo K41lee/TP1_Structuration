@@ -1,5 +1,8 @@
 package hai913i.tp1.visitor;
 
+import hai913i.tp1.model.AttributInfo;
+import hai913i.tp1.model.MethodeInfo;
+import hai913i.tp1.model.TypeInfo;
 import org.eclipse.jdt.core.dom.*;
 import java.util.*;
 
@@ -15,6 +18,21 @@ public class StructureExtractorVisitor extends ASTVisitor {
     public int methodCount = 0;
     public int constructorCount = 0;
     public int fieldCount = 0;
+
+    public List<TypeInfo> extractedTypes = new ArrayList<>();
+    private CompilationUnit currentUnit;
+
+    public StructureExtractorVisitor() {
+    }
+
+    public void setCurrentUnit(CompilationUnit unit) {
+        this.currentUnit = unit;
+    }
+
+    // Constructeur pour recevoir l'unité de compilation (nécessaire pour les numéros de ligne des appels)
+    public StructureExtractorVisitor(CompilationUnit unit) {
+        this.currentUnit = unit;
+    }
 
     // Helper pour récupérer la visibilité d'un noeud
     private String getVisibility(BodyDeclaration node) {
@@ -83,6 +101,10 @@ public class StructureExtractorVisitor extends ASTVisitor {
             System.out.println("  Superclasses : " + String.join(" -> ", superClasses));
         }
 
+        // Listes pour alimenter le modèle de faits (B1)
+        List<AttributInfo> fields = new ArrayList<>();
+        List<MethodeInfo> methods = new ArrayList<>();
+
         // Inspection des membres directs (sans récursivité automatique)
         for (Object decl : node.bodyDeclarations()) {
             if (decl instanceof FieldDeclaration fieldDecl) {
@@ -93,6 +115,9 @@ public class StructureExtractorVisitor extends ASTVisitor {
                         fieldCount++;
                         String fieldName = fragment.getName().getIdentifier();
                         System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
+
+                        // Ajout au modèle de faits
+                        fields.add(new AttributInfo(fieldName, typeName, visibility));
                     }
                 }
             } else if (decl instanceof MethodDeclaration methodDecl) {
@@ -104,8 +129,19 @@ public class StructureExtractorVisitor extends ASTVisitor {
                 int paramCount = methodDecl.parameters().size();
                 boolean isConstructor = methodDecl.isConstructor();
                 System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
+
+                // Extraction des appels internes à cette méthode pour le modèle
+                CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
+                methodDecl.accept(callVisitor);
+
+                // Ajout au modèle de faits
+                methods.add(new MethodeInfo(methodName, paramCount, isConstructor, callVisitor.extractedCalls));
             }
         }
+
+        // Instanciation et stockage de l'objet TypeInfo dans le modèle
+        TypeInfo typeInfo = new TypeInfo(qualifiedName, packageName, genre, superClasses, interfaces, fields, methods);
+        extractedTypes.add(typeInfo);
 
         return super.visit(node);
     }
@@ -117,7 +153,13 @@ public class StructureExtractorVisitor extends ASTVisitor {
         if (binding != null) {
             typeCount++;
             enumCount++;
-            System.out.println("Type trouvé : " + binding.getQualifiedName() + " [enum]");
+
+            String qualifiedName = binding.getQualifiedName();
+            String packageName = (binding.getPackage() != null) ? binding.getPackage().getName() : "(défaut)";
+            System.out.println("Type trouvé : " + qualifiedName + " [enum]");
+
+            List<AttributInfo> fields = new ArrayList<>();
+            List<MethodeInfo> methods = new ArrayList<>();
 
             for (Object decl : node.bodyDeclarations()) {
                 if (decl instanceof FieldDeclaration fieldDecl) {
@@ -128,6 +170,9 @@ public class StructureExtractorVisitor extends ASTVisitor {
                             fieldCount++;
                             String fieldName = fragment.getName().getIdentifier();
                             System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
+
+                            // Ajout au modèle
+                            fields.add(new AttributInfo(fieldName, typeName, visibility));
                         }
                     }
                 } else if (decl instanceof MethodDeclaration methodDecl) {
@@ -139,8 +184,19 @@ public class StructureExtractorVisitor extends ASTVisitor {
                     int paramCount = methodDecl.parameters().size();
                     boolean isConstructor = methodDecl.isConstructor();
                     System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
+
+                    // Extraction des appels dans les méthodes de l'enum
+                    CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
+                    methodDecl.accept(callVisitor);
+
+                    // Ajout au modèle
+                    methods.add(new MethodeInfo(methodName, paramCount, isConstructor, callVisitor.extractedCalls));
                 }
             }
+
+            // Instanciation et ajout de l'enum au modèle de faits (superclasses et interfaces vides pour EnumDeclaration)
+            TypeInfo typeInfo = new TypeInfo(qualifiedName, packageName, "enum", Collections.emptyList(), Collections.emptyList(), fields, methods);
+            extractedTypes.add(typeInfo);
         }
         return super.visit(node);
     }

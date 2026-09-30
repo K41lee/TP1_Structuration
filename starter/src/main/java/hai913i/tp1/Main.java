@@ -3,6 +3,7 @@ package hai913i.tp1;
 import java.nio.file.Path;
 import java.util.List;
 
+import hai913i.tp1.model.TypeInfo;
 import hai913i.tp1.visitor.ASTStructurePrinterVisitor;
 import hai913i.tp1.visitor.CallExtractorVisitor;
 import hai913i.tp1.visitor.StructureExtractorVisitor;
@@ -12,15 +13,6 @@ import hai913i.tp1.parse.JdtParser;
 import hai913i.tp1.parse.JdtParser.ParsedFile;
 import hai913i.tp1.parse.ProjectSources;
 
-/**
- * Point d'entrée en ligne de commande de l'analyseur (version de départ).
- *
- * Le squelette ne vérifie que l'environnement (point de contrôle A0) : il analyse le projet et affiche
- * le nombre d'unités de compilation et d'erreurs. Tout le reste est à concevoir : extraction de la
- * structure, appels, métriques, graphe d'appel, options comme le seuil X.
- *
- * Usage : java -jar target/hai913i-tp1-analyzer.jar DOSSIER_DU_PROJET
- */
 public final class Main {
 
     private Main() {
@@ -56,10 +48,6 @@ public final class Main {
         System.out.println("Unites de compilation  : " + files.size());
         System.out.println("Erreurs de compilation : " + errors);
 
-        // À FAIRE (A1 et suite) : parcourir les AST avec vos visiteurs, construire votre modèle de faits,
-        // puis calculer les métriques et le graphe d'appel. Gardez cette classe courte : elle lit les
-        // arguments et délègue.
-
         // --- TEST ÉTAPE A1 ---
         System.out.println("\n=== TEST A1 : Exploration AST ===");
         ASTStructurePrinterVisitor printerVisitor = new ASTStructurePrinterVisitor();
@@ -67,33 +55,30 @@ public final class Main {
         for (ParsedFile file : files) {
             String fileName = file.path().getFileName().toString();
 
-            // On filtre uniquement sur les deux fichiers demandés dans A1
             if (fileName.equals("Dvd.java") || fileName.equals("Category.java")) {
                 System.out.println("\n--- Arbre pour " + fileName + " ---");
                 file.unit().accept(printerVisitor);
             }
         }
 
-        System.out.println("Racine des sources     : " + sources.sourceRoot());
-        System.out.println("Unites de compilation  : " + files.size());
-        System.out.println("Erreurs de compilation : " + errors);
+        // --- ÉTAPE A2 & B1 : EXTRACTION ET MODÈLE DE FAITS ---
+        System.out.println("\n=== DÉBUT EXTRACTION STRUCTURE (A2 & B1) ===");
 
-        // --- ÉTAPE A2 : EXTRACTION DE LA STRUCTURE ---
-        System.out.println("\n=== DÉBUT EXTRACTION STRUCTURE (A2) ===");
-
-        // 1. On instancie UN SEUL visiteur pour cumuler les résultats sur tous les fichiers
         StructureExtractorVisitor extractor = new StructureExtractorVisitor();
 
-        // 2. On parcourt chaque unité de compilation du projet
         for (ParsedFile file : files) {
+            extractor.setCurrentUnit(file.unit());
             file.unit().accept(extractor);
         }
 
-        // 3. On affiche le bilan final des compteurs
         System.out.println("\n=== BILAN POINT DE CONTRÔLE A2 ===");
         System.out.println("Nombre total de types    : " + extractor.typeCount + " (Classes: " + extractor.classCount + ", Interfaces: " + extractor.interfaceCount + ", Enums: " + extractor.enumCount + ")");
         System.out.println("Nombre total de méthodes : " + extractor.methodCount + " (dont constructeurs: " + extractor.constructorCount + ")");
         System.out.println("Nombre total d'attributs : " + extractor.fieldCount);
+
+        // Récupération de notre modèle de faits (B1)
+        List<TypeInfo> projectModel = extractor.extractedTypes;
+        System.out.println("Taille du modèle de faits (B1) : " + projectModel.size() + " types chargés en mémoire.");
 
         // --- ÉTAPE A3 : EXTRACTION DES APPELS ---
         System.out.println("\n=== DÉBUT EXTRACTION DES APPELS (A3) ===");

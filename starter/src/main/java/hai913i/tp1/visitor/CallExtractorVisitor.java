@@ -1,6 +1,10 @@
 package hai913i.tp1.visitor;
 
+import hai913i.tp1.model.AppelMethodInfo;
 import org.eclipse.jdt.core.dom.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CallExtractorVisitor extends ASTVisitor {
 
@@ -10,6 +14,8 @@ public class CallExtractorVisitor extends ASTVisitor {
     public int internalCalls = 0;
     public int externalCalls = 0;
     public int unresolvedCalls = 0;
+
+    public List<AppelMethodInfo> extractedCalls = new ArrayList<>();
 
     // Pour se souvenir dans quelle méthode/classe on se trouve lors du parcours
     private String currentMethodName = "";
@@ -70,11 +76,22 @@ public class CallExtractorVisitor extends ASTVisitor {
 
         // 5. Classification : interne au projet vs externe (JDK / bibliothèques)
         // Une méthode est interne si sa classe appartient à l'un des paquetages du projet (ex: library.*)
-        if (targetClassName.startsWith("library.")) {
+        boolean isInternal = targetClassName.startsWith("library.");
+        if (isInternal) {
             internalCalls++;
         } else {
             externalCalls++;
         }
+
+        // Enregistrement dans le modèle de faits (B1)
+        extractedCalls.add(new AppelMethodInfo(
+                currentMethodName,
+                targetClassName,
+                targetMethodName,
+                receiverType,
+                lineNumber,
+                isInternal
+        ));
 
         System.out.println("  [Ligne " + lineNumber + "] Appel dans " + currentMethodName + "() -> Receveur: "
                 + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
@@ -103,11 +120,22 @@ public class CallExtractorVisitor extends ASTVisitor {
         // Le receveur d'un super.m() est la superclasse de la classe appelante
         String receiverType = targetClassName;
 
-        if (targetClassName.startsWith("library.")) {
+        boolean isInternal = targetClassName.startsWith("library.");
+        if (isInternal) {
             internalCalls++;
         } else {
             externalCalls++;
         }
+
+        // Enregistrement dans le modèle de faits (B1)
+        extractedCalls.add(new AppelMethodInfo(
+                currentMethodName,
+                targetClassName,
+                targetMethodName,
+                receiverType,
+                lineNumber,
+                isInternal
+        ));
 
         System.out.println("  [Ligne " + lineNumber + "] Appel super dans " + currentMethodName + "() -> Receveur: "
                 + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
