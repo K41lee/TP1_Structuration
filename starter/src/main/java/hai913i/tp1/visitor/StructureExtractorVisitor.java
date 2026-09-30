@@ -7,6 +7,14 @@ import java.util.*;
 // Exercice A2
 public class StructureExtractorVisitor extends ASTVisitor {
 
+    // Compteurs globaux pour valider le point de contrôle A2
+    public int typeCount = 0;
+    public int classCount = 0;
+    public int interfaceCount = 0;
+    public int enumCount = 0;
+    public int methodCount = 0;
+    public int constructorCount = 0;
+    public int fieldCount = 0;
 
     // Helper pour récupérer la visibilité d'un noeud
     private String getVisibility(BodyDeclaration node) {
@@ -31,6 +39,13 @@ public class StructureExtractorVisitor extends ASTVisitor {
             return super.visit(node);
         }
 
+        typeCount++;
+        if (node.isInterface()) {
+            interfaceCount++;
+        } else {
+            classCount++;
+        }
+
         String qualifiedName = binding.getQualifiedName();
 
         // Détermination du paquetage
@@ -46,6 +61,15 @@ public class StructureExtractorVisitor extends ASTVisitor {
         }
 
         System.out.println("Type trouvé : " + qualifiedName + " [" + genre + "] (Paquetage: " + packageName + ")");
+
+        // Interfaces directes
+        List<String> interfaces = new ArrayList<>();
+        for (ITypeBinding superInterface : binding.getInterfaces()) {
+            interfaces.add(superInterface.getQualifiedName());
+        }
+        if (!interfaces.isEmpty()) {
+            System.out.println("  Interfaces directes : " + String.join(", ", interfaces));
+        }
 
         // Chaîne des superclasses
         ITypeBinding currentSuper = binding.getSuperclass();
@@ -66,11 +90,16 @@ public class StructureExtractorVisitor extends ASTVisitor {
                 String typeName = fieldDecl.getType().toString();
                 for (Object frag : fieldDecl.fragments()) {
                     if (frag instanceof VariableDeclarationFragment fragment) {
+                        fieldCount++;
                         String fieldName = fragment.getName().getIdentifier();
                         System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
                     }
                 }
             } else if (decl instanceof MethodDeclaration methodDecl) {
+                methodCount++;
+                if (methodDecl.isConstructor()) {
+                    constructorCount++;
+                }
                 String methodName = methodDecl.getName().getIdentifier();
                 int paramCount = methodDecl.parameters().size();
                 boolean isConstructor = methodDecl.isConstructor();
@@ -86,7 +115,32 @@ public class StructureExtractorVisitor extends ASTVisitor {
     public boolean visit(EnumDeclaration node) {
         ITypeBinding binding = node.resolveBinding();
         if (binding != null) {
+            typeCount++;
+            enumCount++;
             System.out.println("Type trouvé : " + binding.getQualifiedName() + " [enum]");
+
+            for (Object decl : node.bodyDeclarations()) {
+                if (decl instanceof FieldDeclaration fieldDecl) {
+                    String visibility = getVisibility(fieldDecl);
+                    String typeName = fieldDecl.getType().toString();
+                    for (Object frag : fieldDecl.fragments()) {
+                        if (frag instanceof VariableDeclarationFragment fragment) {
+                            fieldCount++;
+                            String fieldName = fragment.getName().getIdentifier();
+                            System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
+                        }
+                    }
+                } else if (decl instanceof MethodDeclaration methodDecl) {
+                    methodCount++;
+                    if (methodDecl.isConstructor()) {
+                        constructorCount++;
+                    }
+                    String methodName = methodDecl.getName().getIdentifier();
+                    int paramCount = methodDecl.parameters().size();
+                    boolean isConstructor = methodDecl.isConstructor();
+                    System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
+                }
+            }
         }
         return super.visit(node);
     }

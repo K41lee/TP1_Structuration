@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import hai913i.tp1.visitor.ASTStructurePrinterVisitor;
+import hai913i.tp1.visitor.StructureExtractorVisitor;
 import org.eclipse.jdt.core.compiler.IProblem;
 
 import hai913i.tp1.parse.JdtParser;
@@ -71,5 +72,26 @@ public final class Main {
                 file.unit().accept(printerVisitor);
             }
         }
+
+        System.out.println("Racine des sources     : " + sources.sourceRoot());
+        System.out.println("Unites de compilation  : " + files.size());
+        System.out.println("Erreurs de compilation : " + errors);
+
+        // --- ÉTAPE A2 : EXTRACTION DE LA STRUCTURE ---
+        System.out.println("\n=== DÉBUT EXTRACTION STRUCTURE (A2) ===");
+
+        // 1. On instancie UN SEUL visiteur pour cumuler les résultats sur tous les fichiers
+        StructureExtractorVisitor extractor = new StructureExtractorVisitor();
+
+        // 2. On parcourt chaque unité de compilation du projet
+        for (ParsedFile file : files) {
+            file.unit().accept(extractor);
+        }
+
+        // 3. On affiche le bilan final des compteurs
+        System.out.println("\n=== BILAN POINT DE CONTRÔLE A2 ===");
+        System.out.println("Nombre total de types    : " + extractor.typeCount + " (Classes: " + extractor.classCount + ", Interfaces: " + extractor.interfaceCount + ", Enums: " + extractor.enumCount + ")");
+        System.out.println("Nombre total de méthodes : " + extractor.methodCount + " (dont constructeurs: " + extractor.constructorCount + ")");
+        System.out.println("Nombre total d'attributs : " + extractor.fieldCount);
     }
 }
