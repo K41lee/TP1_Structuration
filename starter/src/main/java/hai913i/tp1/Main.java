@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import hai913i.tp1.visitor.ASTStructurePrinterVisitor;
+import hai913i.tp1.visitor.CallExtractorVisitor;
 import hai913i.tp1.visitor.StructureExtractorVisitor;
 import org.eclipse.jdt.core.compiler.IProblem;
 
@@ -93,5 +94,33 @@ public final class Main {
         System.out.println("Nombre total de types    : " + extractor.typeCount + " (Classes: " + extractor.classCount + ", Interfaces: " + extractor.interfaceCount + ", Enums: " + extractor.enumCount + ")");
         System.out.println("Nombre total de méthodes : " + extractor.methodCount + " (dont constructeurs: " + extractor.constructorCount + ")");
         System.out.println("Nombre total d'attributs : " + extractor.fieldCount);
+
+        // --- ÉTAPE A3 : EXTRACTION DES APPELS ---
+        System.out.println("\n=== DÉBUT EXTRACTION DES APPELS (A3) ===");
+
+        int totalCalls = 0;
+        int totalMethodInvocations = 0;
+        int totalSuperInvocations = 0;
+        int totalInternalCalls = 0;
+        int totalExternalCalls = 0;
+        int totalUnresolvedCalls = 0;
+
+        for (ParsedFile file : files) {
+            CallExtractorVisitor callVisitor = new CallExtractorVisitor(file.unit());
+            file.unit().accept(callVisitor);
+
+            totalCalls += callVisitor.totalCalls;
+            totalMethodInvocations += callVisitor.methodInvocationCount;
+            totalSuperInvocations += callVisitor.superMethodInvocationCount;
+            totalInternalCalls += callVisitor.internalCalls;
+            totalExternalCalls += callVisitor.externalCalls;
+            totalUnresolvedCalls += callVisitor.unresolvedCalls;
+        }
+
+        System.out.println("\n=== BILAN POINT DE CONTRÔLE A3 ===");
+        System.out.println("Nombre total d'appels      : " + totalCalls + " (" + totalMethodInvocations + " MethodInvocations, " + totalSuperInvocations + " SuperMethodInvocations)");
+        System.out.println("Appels internes au projet  : " + totalInternalCalls);
+        System.out.println("Appels externes (JDK/lib)  : " + totalExternalCalls);
+        System.out.println("Appels non résolus         : " + totalUnresolvedCalls);
     }
 }
