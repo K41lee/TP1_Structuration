@@ -6,5 +6,7 @@ public record MethodeInfo(
         String name,
         int parameterCount,
         boolean isConstructor,
+        boolean hasBody,
+        int linesOfCode,
         List<AppelMethodInfo> calls
 ) {}

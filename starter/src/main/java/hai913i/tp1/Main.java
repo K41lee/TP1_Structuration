@@ -2,7 +2,11 @@ package hai913i.tp1;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.nio.file.Files;
 
+import hai913i.tp1.metrics.MetricsCalculator;
+import hai913i.tp1.model.MethodeInfo;
 import hai913i.tp1.model.TypeInfo;
 import hai913i.tp1.visitor.ASTStructurePrinterVisitor;
 import hai913i.tp1.visitor.CallExtractorVisitor;
@@ -78,7 +82,8 @@ public final class Main {
 
         // Récupération de notre modèle de faits (B1)
         List<TypeInfo> projectModel = extractor.extractedTypes;
-        System.out.println("Taille du modèle de faits (B1) : " + projectModel.size() + " types chargés en mémoire.");
+        // Déplacer plus bas pour garder la cohérence avec les points de contrôle.
+        // System.out.println("Taille du modèle de faits (B1) : " + projectModel.size() + " types chargés en mémoire.");
 
         // --- ÉTAPE A3 : EXTRACTION DES APPELS ---
         System.out.println("\n=== DÉBUT EXTRACTION DES APPELS (A3) ===");
@@ -107,5 +112,92 @@ public final class Main {
         System.out.println("Appels internes au projet  : " + totalInternalCalls);
         System.out.println("Appels externes (JDK/lib)  : " + totalExternalCalls);
         System.out.println("Appels non résolus         : " + totalUnresolvedCalls);
+
+        System.out.println("\n=== BILAN POINT DE CONTRÔLE B1 ===");
+        System.out.println("Taille du modèle de faits : " + projectModel.size() + " types chargés en mémoire.");
+
+        // Calcul des lignes de code totales (LOC)
+        int totalLinesOfCode = 0;
+        for (ParsedFile file : files) {
+            // Calcul rapide du nombre de lignes du fichier source
+            totalLinesOfCode += java.nio.file.Files.readAllLines(file.path()).size();
+        }
+
+// --- ÉTAPE B2 : CALCUL DES MÉTRIQUES SUR LE MODÈLE (B1) ---
+        System.out.println("\n=== BILAN DES MÉTRIQUES (B2) ===");
+
+        // Calcul des lignes de code réelles de l'application (LOC)
+        int totalAppLinesOfCode = 0;
+        for (ParsedFile file : files) {
+            totalAppLinesOfCode += Files.readAllLines(file.path()).size();
+        }
+
+        MetricsCalculator metrics = new MetricsCalculator(projectModel, totalAppLinesOfCode);
+
+        // 1 à 7 : Métriques de base
+        System.out.println("1. Nombre de classes                : " + metrics.getClassCount());
+        System.out.println("2. Nombre de lignes de code (LOC)   : " + metrics.getTotalAppLinesOfCode());
+        System.out.println("3. Nombre total de méthodes         : " + metrics.getTotalMethods());
+        System.out.println("4. Nombre total de paquetages       : " + metrics.getTotalPackages());
+        System.out.println("5. Moyenne méthodes / classe        : " + String.format("%.2f", metrics.getAverageMethodsPerClass()));
+        System.out.println("6. Moyenne LOC / méthode (avec corps): " + String.format("%.2f", metrics.getAverageLinesOfCodePerMethodWithBody()));
+        System.out.println("7. Moyenne attributs / classe       : " + String.format("%.2f", metrics.getAverageFieldsPerClass()));
+
+        // 8. Top 10% classes avec le plus de méthodes
+        System.out.println("\n8. Top 10% des classes (méthodes) :");
+        for (TypeInfo type : metrics.getTop10PercentClassesByMethods()) {
+            System.out.println("   - " + type.qualifiedName() + " (" + type.methods().size() + " méthodes)");
+        }
+
+        // 9. Top 10% classes avec le plus d'attributs
+        System.out.println("\n9. Top 10% des classes (attributs) :");
+        for (TypeInfo type : metrics.getTop10PercentClassesByFields()) {
+            System.out.println("   - " + type.qualifiedName() + " (" + type.fields().size() + " attributs)");
+        }
+
+        // 10. Intersection des deux catégories
+        System.out.println("\n10. Classes présentes dans les deux top 10% :");
+        List<TypeInfo> both = metrics.getClassesInBothTop10Percent();
+        if (both.isEmpty()) {
+            System.out.println("   (Aucune classe dans les deux catégories)");
+        } else {
+            for (TypeInfo type : both) {
+                System.out.println("   - " + type.qualifiedName());
+            }
+        }
+
+        // 11. Classes avec plus de X méthodes (seuil passé en argument ou par défaut = 5)
+        int thresholdX = 5;
+        if (args.length >= 2) {
+            try {
+                thresholdX = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                System.out.println("Seuil invalide, utilisation de la valeur par défaut (5).");
+            }
+        }
+        System.out.println("\n11. Classes ayant plus de " + thresholdX + " méthodes :");
+        for (TypeInfo type : metrics.getClassesWithMoreThanXMethods(thresholdX)) {
+            System.out.println("   - " + type.qualifiedName() + " (" + type.methods().size() + " méthodes)");
+        }
+
+        // 12. Top 10% des méthodes par LOC pour chaque classe
+        System.out.println("\n12. Top 10% des méthodes les plus longues par classe :");
+        Map<String, List<MethodeInfo>> topMethodsPerClass = metrics.getTop10PercentMethodsByLocPerClass();
+        for (String className : topMethodsPerClass.keySet()) {
+            List<MethodeInfo> topM = topMethodsPerClass.get(className);
+            if (!topM.isEmpty()) {
+                System.out.println("   * " + className + " :");
+                for (MethodeInfo m : topM) {
+                    System.out.println("     - " + m.name() + " (" + m.linesOfCode() + " LOC)");
+                }
+            }
+        }
+
+        // 13. Paramètres maximaux
+        System.out.println("\n13. Nombre maximal de paramètres : " + metrics.getMaxParametersCount());
+        System.out.println("    Méthodes concernées :");
+        for (String methodDesc : metrics.getMethodsWithMaxParameters()) {
+            System.out.println("   - " + methodDesc);
+        }
     }
 }

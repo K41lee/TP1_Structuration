@@ -134,8 +134,17 @@ public class StructureExtractorVisitor extends ASTVisitor {
                 CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
                 methodDecl.accept(callVisitor);
 
-                // Ajout au modèle de faits
-                methods.add(new MethodeInfo(methodName, paramCount, isConstructor, callVisitor.extractedCalls));
+                // Calcul des lignes de code sur le CORPS de la méthode (getBody())
+                boolean hasBody = methodDecl.getBody() != null;
+                int methodLoc = 0;
+                if (hasBody && currentUnit != null) {
+                    Block body = methodDecl.getBody();
+                    int startLine = currentUnit.getLineNumber(body.getStartPosition());
+                    int endLine = currentUnit.getLineNumber(body.getStartPosition() + body.getLength());
+                    methodLoc = (endLine - startLine) + 1;
+                }
+
+                methods.add(new MethodeInfo(methodName, paramCount, isConstructor, hasBody, methodLoc, callVisitor.extractedCalls));
             }
         }
 
@@ -189,12 +198,21 @@ public class StructureExtractorVisitor extends ASTVisitor {
                     CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
                     methodDecl.accept(callVisitor);
 
-                    // Ajout au modèle
-                    methods.add(new MethodeInfo(methodName, paramCount, isConstructor, callVisitor.extractedCalls));
+                    // Calcul des lignes de code sur le CORPS de la méthode (getBody())
+                    boolean hasBody = methodDecl.getBody() != null;
+                    int methodLoc = 0;
+                    if (hasBody && currentUnit != null) {
+                        Block body = methodDecl.getBody();
+                        int startLine = currentUnit.getLineNumber(body.getStartPosition());
+                        int endLine = currentUnit.getLineNumber(body.getStartPosition() + body.getLength());
+                        methodLoc = (endLine - startLine) + 1;
+                    }
+
+                    methods.add(new MethodeInfo(methodName, paramCount, isConstructor, hasBody, methodLoc, callVisitor.extractedCalls));
                 }
             }
 
-            // Instanciation et ajout de l'enum au modèle de faits (superclasses et interfaces vides pour EnumDeclaration)
+            // Instanciation et ajout de l'enum au modèle de faits
             TypeInfo typeInfo = new TypeInfo(qualifiedName, packageName, "enum", Collections.emptyList(), Collections.emptyList(), fields, methods);
             extractedTypes.add(typeInfo);
         }
