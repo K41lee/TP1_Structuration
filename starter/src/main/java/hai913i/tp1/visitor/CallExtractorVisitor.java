@@ -19,6 +19,7 @@ public class CallExtractorVisitor extends ASTVisitor {
 
     // Pour se souvenir dans quelle méthode/classe on se trouve lors du parcours
     private String currentMethodName = "";
+    private int currentMethodParamCount = 0;
     private CompilationUnit currentUnit;
 
     public CallExtractorVisitor(CompilationUnit unit) {
@@ -28,6 +29,7 @@ public class CallExtractorVisitor extends ASTVisitor {
     @Override
     public boolean visit(MethodDeclaration node) {
         currentMethodName = node.getName().getIdentifier();
+        currentMethodParamCount = node.parameters().size();
         return super.visit(node);
     }
 
@@ -53,6 +55,7 @@ public class CallExtractorVisitor extends ASTVisitor {
         IMethodBinding targetDecl = methodBinding.getMethodDeclaration();
         String targetClassName = targetDecl.getDeclaringClass().getQualifiedName();
         String targetMethodName = targetDecl.getName();
+        int targetParamCount = targetDecl.getParameterTypes().length;
 
         // 4. Calcul du type statique du receveur (§ 4.4)
         String receiverType = "";
@@ -88,6 +91,7 @@ public class CallExtractorVisitor extends ASTVisitor {
                 currentMethodName,
                 targetClassName,
                 targetMethodName,
+                targetParamCount,
                 receiverType,
                 lineNumber,
                 isInternal
@@ -116,6 +120,7 @@ public class CallExtractorVisitor extends ASTVisitor {
         IMethodBinding targetDecl = methodBinding.getMethodDeclaration();
         String targetClassName = targetDecl.getDeclaringClass().getQualifiedName();
         String targetMethodName = targetDecl.getName();
+        int targetParamCount = targetDecl.getParameterTypes().length;
 
         // Le receveur d'un super.m() est la superclasse de la classe appelante
         String receiverType = targetClassName;
@@ -132,6 +137,7 @@ public class CallExtractorVisitor extends ASTVisitor {
                 currentMethodName,
                 targetClassName,
                 targetMethodName,
+                targetParamCount,
                 receiverType,
                 lineNumber,
                 isInternal

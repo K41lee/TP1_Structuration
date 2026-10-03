@@ -1,10 +1,13 @@
 package hai913i.tp1;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.nio.file.Files;
 
+import hai913i.tp1.graph.CallGraph;
 import hai913i.tp1.metrics.MetricsCalculator;
 import hai913i.tp1.model.MethodeInfo;
 import hai913i.tp1.model.TypeInfo;
@@ -199,5 +202,65 @@ public final class Main {
         for (String methodDesc : metrics.getMethodsWithMaxParameters()) {
             System.out.println("   - " + methodDesc);
         }
+
+// --- ÉTAPE B3 : BILAN DU GRAPHE D'APPEL ---
+        System.out.println("\n=== BILAN DU GRAPHE D'APPEL (B3) ===");
+        CallGraph callGraph = new CallGraph(projectModel);
+
+        System.out.println("Nombre de noeuds (méthodes)   : " + callGraph.getNodeCount());
+        System.out.println("Nombre d'arcs orientés       : " + callGraph.getEdgeCount());
+        System.out.println("Sites d'appels internes      : " + callGraph.getTotalInternalCallSites());
+        System.out.println("Appels externes (JDK/lib)    : " + callGraph.getExternalCallsCount());
+        System.out.println("Appels non résolus           : " + callGraph.getUnresolvedCallsCount());
+
+        System.out.println("\n=== TEST ANALYSE D'IMPACT (B3.3) ===");
+
+        String[] targetsToTest = {"library.model.Loanable#checkOut", "library.model.Item#checkOut"};
+
+        for (String target : targetsToTest) {
+            System.out.println("\nAppelantes de " + target + " (sens inverse) :");
+            Map<String, Integer> callers = callGraph.getCallers(target);
+            if (callers.isEmpty()) {
+                System.out.println("   (Aucun appelant interne trouvé)");
+            } else {
+                for (String caller : callers.keySet()) {
+                    System.out.println("   <- " + caller + " (poids: " + callers.get(caller) + ")");
+                }
+            }
+        }
+
+        callGraph.exportToDot("graph.dot");
+/*
+        // --- BLOC DE DÉBOGAGE TEMPORAIRE (B3) ---
+        System.out.println("\n--- DEBUG 1 : Recherche des méthodes manquantes parmi les 59 ---");
+        int totalMethodsInModel = 0;
+        for (TypeInfo type : projectModel) {
+            totalMethodsInModel += type.methods().size();
+            for (MethodeInfo m : type.methods()) {
+                String key = type.qualifiedName() + "#" + m.name();
+                if (!callGraph.getNodes().contains(key)) {
+                    System.out.println("  [Noeud manquant dans le graphe] : " + key + " (hasBody=" + m.hasBody() + ")");
+                }
+            }
+        }
+        System.out.println("Total méthodes dans le modèle : " + totalMethodsInModel);
+
+        System.out.println("\n--- DEBUG 2 : Invocations multiples (poids > 1 ou surcharges) ---");
+        for (CallGraph.Edge edge : callGraph.getEdges()) {
+            if (edge.weight() > 1) {
+                System.out.println("  [Arc multiple] : " + edge.source() + " -> " + edge.target() + " (poids: " + edge.weight() + ")");
+            }
+        }
+
+        System.out.println("\n--- DEBUG 3 : Recherche de l'arc manquant (43 actuels vs 44 attendus) ---");
+        List<String> sortedEdges = new ArrayList<>();
+        for (CallGraph.Edge edge : callGraph.getEdges()) {
+            sortedEdges.add(edge.source() + " -> " + edge.target() + " (poids=" + edge.weight() + ")");
+        }
+        Collections.sort(sortedEdges);
+        for (String edgeStr : sortedEdges) {
+            System.out.println("  " + edgeStr);
+        }
+ */
     }
 }
