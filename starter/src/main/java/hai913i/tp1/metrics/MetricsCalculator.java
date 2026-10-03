@@ -88,7 +88,13 @@ public class MetricsCalculator {
 
     // 8. Top 10% des classes selon le nombre de méthodes (avec gestion des ex-æquo)
     public List<TypeInfo> getTop10PercentClassesByMethods() {
+        // 1. Filtrer les candidats à 0
         List<TypeInfo> sorted = new ArrayList<>(model);
+        for (TypeInfo type : model) {
+            if (type.fields().size() > 0) {
+                sorted.add(type);
+            }
+        }
         sorted.sort(new Comparator<TypeInfo>() {
             @Override
             public int compare(TypeInfo t1, TypeInfo t2) {
@@ -123,8 +129,13 @@ public class MetricsCalculator {
 
     // 9. Top 10% des classes selon le nombre d'attributs (avec gestion des ex-æquo)
     public List<TypeInfo> getTop10PercentClassesByFields() {
+        // 1. Filtrer les candidats à 0
         List<TypeInfo> sorted = new ArrayList<>(model);
-        sorted.sort(new Comparator<TypeInfo>() {
+        for (TypeInfo type : model) {
+            if (type.fields().size() > 0) {
+                sorted.add(type);
+            }
+        }        sorted.sort(new Comparator<TypeInfo>() {
             @Override
             public int compare(TypeInfo t1, TypeInfo t2) {
                 return Integer.compare(t2.fields().size(), t1.fields().size());
@@ -189,7 +200,7 @@ public class MetricsCalculator {
         for (TypeInfo type : model) {
             List<MethodeInfo> methodsWithBody = new ArrayList<>();
             for (MethodeInfo m : type.methods()) {
-                if (m.hasBody()) {
+                if (m.hasBody() && m.linesOfCode() > 0) {
                     methodsWithBody.add(m);
                 }
             }
