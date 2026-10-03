@@ -29,3 +29,10 @@ Lancez l'outil depuis la racine de votre projet d'analyseur en fournissant le ch
 
 ### Exemple :
 `java -jar starter/target/hai913i-tp1-analyzer.jar ../resources/validation`
+
+## 5. Visualisation du Graphe d'Appel (Graphviz)
+
+Lors de l'exécution, l'outil génère un fichier textuel graph.dot. Vous pouvez le convertir en image vectorielle grâce à Graphviz :
+
+# Installation sur Debian/Ubuntu : sudo apt install graphviz
+dot -Tsvg graph.dot -o graphe_appels.svg
