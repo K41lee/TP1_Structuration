@@ -46,7 +46,7 @@ public class CallExtractorVisitor extends ASTVisitor {
 
         if (methodBinding == null) {
             unresolvedCalls++;
-            System.out.println("  [Ligne " + lineNumber + "] Appel non résolu : " + node.getName().getIdentifier());
+        //    System.out.println("  [Ligne " + lineNumber + "] Appel non résolu : " + node.getName().getIdentifier());
             return super.visit(node);
         }
 
@@ -97,8 +97,8 @@ public class CallExtractorVisitor extends ASTVisitor {
                 isInternal
         ));
 
-        System.out.println("  [Ligne " + lineNumber + "] Appel dans " + currentMethodName + "() -> Receveur: "
-                + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
+        // System.out.println("  [Ligne " + lineNumber + "] Appel dans " + currentMethodName + "() -> Receveur: "
+        //        + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
 
         return super.visit(node);
     }
@@ -113,7 +113,7 @@ public class CallExtractorVisitor extends ASTVisitor {
 
         if (methodBinding == null) {
             unresolvedCalls++;
-            System.out.println("  [Ligne " + lineNumber + "] Appel super non résolu : " + node.getName().getIdentifier());
+            // System.out.println("  [Ligne " + lineNumber + "] Appel super non résolu : " + node.getName().getIdentifier());
             return super.visit(node);
         }
 
@@ -143,8 +143,8 @@ public class CallExtractorVisitor extends ASTVisitor {
                 isInternal
         ));
 
-        System.out.println("  [Ligne " + lineNumber + "] Appel super dans " + currentMethodName + "() -> Receveur: "
-                + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
+        // System.out.println("  [Ligne " + lineNumber + "] Appel super dans " + currentMethodName + "() -> Receveur: "
+        //        + receiverType + " | Cible: " + targetClassName + "#" + targetMethodName);
 
         return super.visit(node);
     }

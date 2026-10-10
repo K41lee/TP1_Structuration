@@ -11,9 +11,24 @@ import java.util.Map;
 
 public class ConsoleDisplay {
 
+    // Affichage de l'arbre AST (A1)
+    public static void printAst(List<hai913i.tp1.parse.JdtParser.ParsedFile> files) {
+        System.out.println("\n=== AFFICHAGE DE L'ARBRE AST (A1) ===");
+        hai913i.tp1.visitor.ASTStructurePrinterVisitor printerVisitor = new hai913i.tp1.visitor.ASTStructurePrinterVisitor();
+
+        for (hai913i.tp1.parse.JdtParser.ParsedFile file : files) {
+            String fileName = file.path().getFileName().toString();
+            // On se limite aux fichiers demandés dans le TP pour ne pas inonder la console
+            if (fileName.equals("Dvd.java") || fileName.equals("Category.java")) {
+                System.out.println("\n--- Arbre pour " + fileName + " ---");
+                file.unit().accept(printerVisitor);
+            }
+        }
+    }
+
     // Affichage de la structure (A2 / B1)
     public static void printStructure(List<TypeInfo> model) {
-        System.out.println("\n=== BILAN DE LA STRUCTURE (B1) ===");
+        System.out.println("\n=== BILAN DE LA STRUCTURE (A2/B1) ===");
         int totalClasses = 0, totalInterfaces = 0, totalEnums = 0;
         int totalMethods = 0, totalConstructors = 0, totalFields = 0;
 

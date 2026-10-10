@@ -36,6 +36,8 @@ Arguments :
 
     <ACTION> : Spécifie le résultat attendu. Les valeurs possibles sont :
 
+        ast : Affichage brut de l'arbre AST.
+
         structure : Affiche l'extraction de la structure (classes, interfaces, méthodes, attributs).
 
         appels : Affiche le bilan des appels de méthodes extraits.

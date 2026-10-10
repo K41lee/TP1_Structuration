@@ -71,6 +71,11 @@ public final class Main {
         // 5. Délégation à l'Affichage et aux composants spécialisés selon l'action demandée
         boolean actionFound = false;
 
+        if (action.equals("ast") || action.equals("all")) {
+            ConsoleDisplay.printAst(files);
+            actionFound = true;
+        }
+
         if (action.equals("structure") || action.equals("all")) {
             ConsoleDisplay.printStructure(projectModel);
             actionFound = true;
@@ -102,7 +107,7 @@ public final class Main {
 
     private static void printUsageAndExit() {
         System.err.println("Usage : java -jar target/hai913i-tp1-analyzer.jar <CHEMIN_DU_PROJET> <ACTION> [SEUIL_X]");
-        System.err.println("  <ACTION>  : structure | appels | metrics | graph | all");
+        System.err.println("  <ACTION>  : ast | structure | appels | metrics | graph | all");
         System.err.println("  [SEUIL_X] : (Optionnel) Entier positif pour la métrique 11 (défaut = 5).");
         System.exit(1);
     }

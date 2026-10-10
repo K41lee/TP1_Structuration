@@ -78,7 +78,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
             genre = "interface";
         }
 
-        System.out.println("Type trouvé : " + qualifiedName + " [" + genre + "] (Paquetage: " + packageName + ")");
+        // System.out.println("Type trouvé : " + qualifiedName + " [" + genre + "] (Paquetage: " + packageName + ")");
 
         // Interfaces directes
         List<String> interfaces = new ArrayList<>();
@@ -86,7 +86,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
             interfaces.add(superInterface.getQualifiedName());
         }
         if (!interfaces.isEmpty()) {
-            System.out.println("  Interfaces directes : " + String.join(", ", interfaces));
+            // System.out.println("  Interfaces directes : " + String.join(", ", interfaces));
         }
 
         // Chaîne des superclasses
@@ -98,7 +98,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
         }
 
         if (!superClasses.isEmpty()) {
-            System.out.println("  Superclasses : " + String.join(" -> ", superClasses));
+            // System.out.println("  Superclasses : " + String.join(" -> ", superClasses));
         }
 
         // Listes pour alimenter le modèle de faits (B1)
@@ -114,7 +114,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
                     if (frag instanceof VariableDeclarationFragment fragment) {
                         fieldCount++;
                         String fieldName = fragment.getName().getIdentifier();
-                        System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
+                        // System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
 
                         // Ajout au modèle de faits
                         fields.add(new AttributInfo(fieldName, typeName, visibility));
@@ -128,7 +128,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
                 String methodName = methodDecl.getName().getIdentifier();
                 int paramCount = methodDecl.parameters().size();
                 boolean isConstructor = methodDecl.isConstructor();
-                System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
+                // System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
 
                 // Extraction des appels internes à cette méthode pour le modèle
                 CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
@@ -165,7 +165,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
 
             String qualifiedName = binding.getQualifiedName();
             String packageName = (binding.getPackage() != null) ? binding.getPackage().getName() : "(défaut)";
-            System.out.println("Type trouvé : " + qualifiedName + " [enum]");
+            // System.out.println("Type trouvé : " + qualifiedName + " [enum]");
 
             List<AttributInfo> fields = new ArrayList<>();
             List<MethodeInfo> methods = new ArrayList<>();
@@ -178,7 +178,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
                         if (frag instanceof VariableDeclarationFragment fragment) {
                             fieldCount++;
                             String fieldName = fragment.getName().getIdentifier();
-                            System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
+                            // System.out.println("  Attribut : " + fieldName + " : " + typeName + " (" + visibility + ")");
 
                             // Ajout au modèle
                             fields.add(new AttributInfo(fieldName, typeName, visibility));
@@ -192,7 +192,7 @@ public class StructureExtractorVisitor extends ASTVisitor {
                     String methodName = methodDecl.getName().getIdentifier();
                     int paramCount = methodDecl.parameters().size();
                     boolean isConstructor = methodDecl.isConstructor();
-                    System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
+                    // System.out.println("  Méthode : " + methodName + " (Params: " + paramCount + ", Constructeur: " + isConstructor + ")");
 
                     // Extraction des appels dans les méthodes de l'enum
                     CallExtractorVisitor callVisitor = new CallExtractorVisitor(currentUnit);
